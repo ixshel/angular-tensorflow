@@ -19,8 +19,12 @@ import * as mobilenet from '@tensorflow-models/mobilenet';
 })
 export class CamComponent implements OnInit {
   model;
+  modelType: string = null;
+  startCamera: boolean = false;
+  liveVid: any = null;
   loading: boolean = true;
   predictions: Array<any> = [];
+  selectedCam: any = { facingMode: 'user' };
   @ViewChild('video', { static: true }) video: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas', { static: true }) canvas: ElementRef<HTMLCanvasElement>;
   private ctx: CanvasRenderingContext2D;
@@ -29,39 +33,59 @@ export class CamComponent implements OnInit {
 
   async ngOnInit() {
     console.log('cam app');
-    // to start the camera
-    await this.startCamera();
-
-    // With mobilinet model
-    // this.model = await mobilenet.load();
-    // this.withMobilinet();
-
-    // with cocoSSD
-    await this.predictiveWithCocoSSD();
   }
 
-  startCamera() {
-    const liveVid = this.video.nativeElement;
+  async selectCamera(camera: string) {
+    if (this.liveVid && this.liveVid.srcObject) {
+      console.log('video: ', this.liveVid.srcObject.getTracks()[0]);
+      this.liveVid.srcObject.getTracks()[0].stop();
+    }
+    await this.initCamera(camera);
+  }
+
+  private initCamera(camera?: string) {
+    this.liveVid = this.video.nativeElement;
     this.loading = false;
+    console.log('set camera: ', camera);
+
+    let selectedCam: any = null;
+    if (camera === 'front') {
+      selectedCam = { facingMode: 'user' };
+    }
+
+    if (camera === 'rear') {
+      selectedCam = { facingMode: { exact: 'environment' } };
+    }
 
     if (navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
         .getUserMedia({
-          video: {
-            facingMode: 'user'
-          },
+          video: selectedCam,
           audio: false
         })
         .then(stream => {
-          console.log('live...');
-          liveVid.srcObject = stream;
-          // if you dont set autoplay in the html
-          // liveVid.play();
+          this.liveVid.srcObject = stream;
         })
         .catch(error => {
-          console.log(`We have an error: ${error}`);
+          alert('device camera not available');
+          console.log('We have an error: ', JSON.stringify(error));
         });
     }
+  }
+
+  async selectModel(selectedModel?: string) {
+    if (selectedModel === 'CocoSSD') {
+      // you can pass 'lite_mobilenet_v2' as argument
+      this.model = await cocoSSD.load();
+      if (this.model) {
+        this.detectFrame();
+      }
+    }
+
+    if (selectedModel === 'Mobilinet') {
+      this.model = await mobilenet.load();
+    }
+
   }
 
   withMobilinet() {
@@ -72,20 +96,10 @@ export class CamComponent implements OnInit {
     }, 3000);
   }
 
-  async predictiveWithCocoSSD() {
-    // you can pass 'lite_mobilenet_v2' as argument
-    this.model = await cocoSSD.load();
-    this.video.nativeElement.addEventListener('loadeddata', () => {
-      this.detectFrame();
-    });
-  }
-
   detectFrame() {
-    // console.log('detect frame...');
-    // setTimeout(() => {
-      this.model.detect(this.video.nativeElement)
+    this.model
+      .detect(this.video.nativeElement)
       .then(preds => {
-        // console.log('Predictions: ', preds);
         this.predictions = preds;
         this.renderPredictions();
         requestAnimationFrame(() => {
@@ -95,11 +109,9 @@ export class CamComponent implements OnInit {
       .catch(error => {
         console.log('Error: ', error);
       });
-    // }, 300);
   }
 
   renderPredictions() {
-
     this.ctx = this.canvas.nativeElement.getContext('2d');
     this.canvas.nativeElement.width = 300;
     this.canvas.nativeElement.height = 225;
@@ -109,15 +121,15 @@ export class CamComponent implements OnInit {
     this.ctx.drawImage(this.video.nativeElement, 0, 0, 300, 225);
 
     this.predictions.forEach(prediction => {
-      const x = prediction.bbox[0] + (100/2);
+      const x = prediction.bbox[0] + 100 / 2;
       const y = prediction.bbox[1] - 20;
       const width = prediction.bbox[2] / 5;
       const height = prediction.bbox[3] / 5;
-          // Bounding box
+      // Bounding box
       this.ctx.strokeStyle = '#00FFFF';
       this.ctx.lineWidth = 2;
       this.ctx.strokeRect(x, y, width, height);
-          // Label background
+      // Label background
       this.ctx.fillStyle = '#00FFFF';
       const textWidth = this.ctx.measureText(prediction.class).width;
       const textHeight = parseInt('16px sans-serif', 10); // base 10
@@ -125,7 +137,7 @@ export class CamComponent implements OnInit {
     });
 
     this.predictions.forEach(prediction => {
-      const x = prediction.bbox[0] + (100/2);
+      const x = prediction.bbox[0] + 100 / 2;
       const y = prediction.bbox[1] - 20;
       // Draw the text last to ensure it's on top.
       this.ctx.fillStyle = '#000000';

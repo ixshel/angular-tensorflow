@@ -12,6 +12,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 // Material components
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,8 @@ import { MatChipsModule } from '@angular/material/chips';
     AppRoutingModule,
     BrowserAnimationsModule,
     MatCardModule,
-    MatChipsModule
+    MatChipsModule,
+    MatButtonModule
   ],
   providers: [],
   bootstrap: [AppComponent]
