@@ -1,0 +1,24 @@
+<h1>Cam</h1>
+
+<div *ngIf="loading">
+  <img src="./assets/loading.gif" alt="loading" />
+</div>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Live</mat-card-title>
+  </mat-card-header>
+  <div class="mainContainer">
+      <!-- <video id="webcam" autoplay muted width="300px" height="225px" #video></video> -->
+      <video id="webcam" hidden autoplay width="300px" height="225px" #video></video>
+      <canvas id="canvas" #canvas></canvas>
+  </div>
+  <mat-card-content class="pred-text">
+    <mat-chip-list *ngFor="let item of predictions">
+      <mat-chip [color]="item.probability > 0.5 ? 'primary' : 'accent'" selected>
+          <!-- {{ item.className }} - {{ item.probability | percent }} -->
+          {{ item.class }} - {{ item.score | percent }}
+        </mat-chip>
+    </mat-chip-list>
+  </mat-card-content>
+</mat-card>
