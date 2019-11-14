@@ -8,7 +8,7 @@ import {
 
 // import the model that we are going to use
 import * as ts from '@tensorflow/tfjs';
-import * as tf from '@tensorflow/tfjs-core';
+// import * as tf from '@tensorflow/tfjs-core';
 import * as cocoSSD from '@tensorflow-models/coco-ssd';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 
@@ -22,7 +22,7 @@ export class CamComponent implements OnInit {
   modelType: string = null;
   startCamera: boolean = false;
   liveVid: any = null;
-  loading: boolean = true;
+  loading: boolean = false;
   predictions: Array<any> = [];
   selectedCam: any = { facingMode: 'user' };
   @ViewChild('video', { static: true }) video: ElementRef<HTMLVideoElement>;
@@ -74,10 +74,12 @@ export class CamComponent implements OnInit {
   }
 
   async selectModel(selectedModel?: string) {
+    this.loading = true;
     if (selectedModel === 'CocoSSD') {
       // you can pass 'lite_mobilenet_v2' as argument
       this.model = await cocoSSD.load();
       if (this.model) {
+        this.loading = false;
         this.detectFrame();
       }
     }
@@ -121,10 +123,10 @@ export class CamComponent implements OnInit {
     this.ctx.drawImage(this.video.nativeElement, 0, 0, 300, 225);
 
     this.predictions.forEach(prediction => {
-      const x = prediction.bbox[0] + 100 / 2;
-      const y = prediction.bbox[1] - 20;
-      const width = prediction.bbox[2] / 5;
-      const height = prediction.bbox[3] / 5;
+      const x = prediction.bbox[0];
+      const y = prediction.bbox[1];
+      const width = prediction.bbox[2];
+      const height = prediction.bbox[3];
       // Bounding box
       this.ctx.strokeStyle = '#00FFFF';
       this.ctx.lineWidth = 2;
@@ -137,8 +139,8 @@ export class CamComponent implements OnInit {
     });
 
     this.predictions.forEach(prediction => {
-      const x = prediction.bbox[0] + 100 / 2;
-      const y = prediction.bbox[1] - 20;
+      const x = prediction.bbox[0];
+      const y = prediction.bbox[1];
       // Draw the text last to ensure it's on top.
       this.ctx.fillStyle = '#000000';
       this.ctx.fillText(prediction.class, x, y);
