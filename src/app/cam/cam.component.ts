@@ -136,12 +136,7 @@ export class CamComponent implements OnInit {
       const textWidth = this.ctx.measureText(prediction.class).width;
       const textHeight = parseInt('16px sans-serif', 10); // base 10
       this.ctx.fillRect(x, y, textWidth + 4, textHeight + 4);
-    });
-
-    this.predictions.forEach(prediction => {
-      const x = prediction.bbox[0];
-      const y = prediction.bbox[1];
-      // Draw the text last to ensure it's on top.
+      // Draw the text
       this.ctx.fillStyle = '#000000';
       this.ctx.fillText(prediction.class, x, y);
     });
